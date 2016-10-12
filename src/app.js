@@ -2,6 +2,7 @@
 
 /* Classes */
 const Game = require('./game');
+const Vactor = require('./vector');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
@@ -246,6 +247,39 @@ function update(elapsedTime) {
   });
 
   // TODO: Process ball collisions
+  collisions.forEach(function(pair) {
+	//Find the normal of collision
+	var collisionNormal = {
+		x: pair.a.position.x - pair.b.position.x,
+		y: pair.a.position.y - pair.b.position.y
+	}
+	//Find overlap between balls
+	var overlap = 32 - Vector.magnitude(collisionNormal);
+	collisionNormal = Vector.normalize(collisionNormal);
+	pair.a.position.x += collisionNormal.x * overlap / 2;
+	pair.a.position.y += collisionNormal.y * overlap / 2;
+	pair.b.position.x -= collisionNormal.x * overlap / 2;
+	pair.b.position.y -= collisionNormal.y * overlap / 2;
+	
+	//Rotate the world so that it's easier to calculate collision
+	var angle = Math.atan2(collisionNormal.y, collisionNormal.x);
+	var a = Vector.rotate(pair.a.velocity, angle);
+	var b = Vector.rotate(pair.b.velocity, angle);
+	
+	//Solve the collision
+	var temp = a.x;
+	a.x = b.x;
+	b.x = temp;
+	
+	//Rotate back to original angle
+	a = Vector.rotate(a, -angle);
+	b = Vector.rotate(b, -angle);
+	pair.a.velocity.x = a.x;
+	pair.a.velocity.y = a.y;
+	pair.b.velocity.x = b.x;
+	pair.b.velocity.y = b.y;
+	
+  });
 }
 
 /**
